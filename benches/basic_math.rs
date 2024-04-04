@@ -85,7 +85,7 @@ pub fn simplify(s: &str) -> String {
 }
 
 
-pub fn criterion_benchmark(c: &mut Criterion) {
+pub fn basic_math_benchmark(c: &mut Criterion) {
     //assert_eq!(simplify("(+ a (+ b (+ (* 0 c) d)))"), "(+ d (+ b a))");
     c.bench_function(
         "simpl1",
@@ -103,6 +103,5 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(benches, basic_math_benchmark);
 criterion_main!(benches);
-
