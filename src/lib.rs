@@ -1,17 +1,7 @@
 use egg::*;
 
-#[inline]
-pub fn fibonacci(n: u64) -> u64 {
-    match n {
-        0 => 1,
-        1 => 1,
-        n => fibonacci(n-1) + fibonacci(n-2),
-    }
-}
-
-
 define_language! {
-    enum BasicMath {
+    pub enum BasicMath {
         Num(i32),
         "+" = Add([Id; 2]),
         "-" = Sub([Id; 2]),
@@ -23,7 +13,7 @@ define_language! {
     }
 }
 
-fn make_rules() -> Vec<Rewrite<BasicMath, ()>> {
+pub fn basic_math_rules() -> Vec<Rewrite<BasicMath, ()>> {
     vec![
         // monoid +
         rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
@@ -71,23 +61,6 @@ fn make_rules() -> Vec<Rewrite<BasicMath, ()>> {
         //inv(x) == x^(-1)
         rewrite!("power-inv"; "(inv ?x)" => "(^ ?x (- 1))")
     ]
-}
-/// parse an expression, simplify it using egg, and pretty print it back out
-pub fn simplify(s: &str) -> String {
-    // parse the expression, the type annotation tells it which Language to use
-    let expr: RecExpr<BasicMath> = s.parse().unwrap();
-
-    // simplify the expression using a Runner, which creates an e-graph with
-    // the given expression and runs the given rules over it
-    let runner = Runner::default().with_expr(&expr).run(&make_rules());
-
-    // the Runner knows which e-class the expression given with `with_expr` is in
-    let root = runner.roots[0];
-
-    // use an Extractor to pick the best element of the root eclass
-    let extractor = Extractor::new(&runner.egraph, AstSize);
-    let (_, best) = extractor.find_best(root);
-    best.to_string()
 }
 
 // fn main() {
