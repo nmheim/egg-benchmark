@@ -52,7 +52,15 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
 
 pub fn prove(s: &str) -> bool {
     let expr: RecExpr<CalcLogic> = s.parse().unwrap();
-    let runner = Runner::default().with_expr(&expr).run(&calc_logic_rules());
+    let scheduler = BackoffScheduler::default()
+        .with_initial_match_limit(6000)
+        .with_ban_length(5);
+    let runner = Runner::default()
+        .with_iter_limit(10)
+        .with_node_limit(5_000)
+        .with_expr(&expr)
+        .with_scheduler(scheduler)
+        .run(&calc_logic_rules());
     let t: RecExpr<CalcLogic> = "true".parse().unwrap();
     let r = runner.egraph.equivs(&expr, &t);
     r.len() > 0
@@ -62,5 +70,9 @@ pub fn prove(s: &str) -> bool {
 pub fn main() {
     //let s = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
     let s = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    println!("{}", prove(&s))
+    let apply_time: std::time::Instant = std::time::Instant::now();
+    // assert_eq!(simplify("(+ 0 (* 1 foo))"), "foo");
+    assert!(prove(&s));
+    let apply_time = apply_time.elapsed().as_secs_f64();
+    println!("{}", apply_time)
 }
