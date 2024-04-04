@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::*;
+use egg_benchmark::prove;
 
 // ## Theory of Calculational Logic 
 // https://www.cs.cornell.edu/gries/Logic/Axioms.html
@@ -66,23 +67,6 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
     ].concat()
 }
 
-pub fn prove(s: &str) -> bool {
-    let expr: RecExpr<CalcLogic> = s.parse().unwrap();
-    let scheduler = BackoffScheduler::default()
-        .with_initial_match_limit(6000)
-        .with_ban_length(5);
-    let runner = Runner::default()
-        .with_iter_limit(10)
-        .with_node_limit(5_000)
-        .with_expr(&expr)
-        .with_scheduler(scheduler)
-        .run(&calc_logic_rules());
-    let t: RecExpr<CalcLogic> = "true".parse().unwrap();
-    let r = runner.egraph.equivs(&expr, &t);
-    r.len() > 0
-}
-
-
 // fold = @theory p q begin
 //   (p::Bool == q::Bool) => (p == q)
 //   (p::Bool || q::Bool) => (p || q)
@@ -91,20 +75,22 @@ pub fn prove(s: &str) -> bool {
 //   !(p::Bool)           => (!p)
 // end
 // 
-// calc = @theory p q r begin
-// end
-// 
 // calculational_logic_theory = calc ∪ fold
 
 
 pub fn calc_logic_benchmark(c: &mut Criterion) {
+    let rules = calc_logic_rules();
     let demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
-    assert!(prove(&demorgan));
-    c.bench_function( "demorgan", |b| b.iter(|| prove(black_box(&demorgan))));
+    assert!(prove(&demorgan, &rules));
+    c.bench_function( "demorgan",
+        |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules)))
+    );
 
     let frege = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    assert!(prove(&frege));
-    c.bench_function( "frege", |b| b.iter(|| prove(black_box(&frege))));
+    assert!(prove(&frege, &rules));
+    c.bench_function( "frege",
+        |b| b.iter(|| prove(black_box(&frege), black_box(&rules)))
+    );
 }
 
 criterion_group!(benches, calc_logic_benchmark);

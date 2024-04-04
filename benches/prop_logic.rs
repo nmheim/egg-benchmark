@@ -1,3 +1,4 @@
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::{*, rewrite as rw};
 use egg_benchmark::prove;
 
@@ -79,14 +80,12 @@ pub fn propositional_logic_rules() -> Vec<Rewrite<PropositionalLogic, ()>> {
 }
 
 
-pub fn main() {
+pub fn propositional_logic_benchmark(c: &mut Criterion) {
     let rules = propositional_logic_rules();
     let ex_orig = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s)))";
-    // let ex_logic = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
-    // ex_logic = "(!(p || q) == (!p && !q))";
-    let ex_logic = "(== (!! (|| p q)) (&& (!! p) (!!q)))";
+    let ex_logic = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
 
-    println!("{}", prove(&ex_logic, &rules));
+    assert!(prove(&ex_logic, &rules));
     // c.bench_function( "demorgan",
     //     |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules)))
     // );
@@ -97,4 +96,7 @@ pub fn main() {
     //     |b| b.iter(|| prove(black_box(&frege), black_box(&rules)))
     // );
 }
+
+criterion_group!(benches, propositional_logic_benchmark);
+criterion_main!(benches);
 
