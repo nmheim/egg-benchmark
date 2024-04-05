@@ -11,5 +11,13 @@ egg = "0.9.5"
 log = "0.4.21"
 
 [[bench]]
+name = "prop_logic"
+harness = false
+
+[[bench]]
 name = "basic_math"
+harness = false
+
+[[bench]]
+name = "calc_logic"
 harness = false

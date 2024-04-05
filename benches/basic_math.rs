@@ -85,24 +85,23 @@ pub fn simplify(s: &str) -> String {
 }
 
 
-pub fn criterion_benchmark(c: &mut Criterion) {
-    //assert_eq!(simplify("(+ a (+ b (+ (* 0 c) d)))"), "(+ d (+ b a))");
+pub fn basic_math_benchmark(c: &mut Criterion) {
     c.bench_function(
         "simpl1",
-        |b| b.iter(||
-            simplify(black_box("(+ a (+ b (+ (* 0 c) d)))"))
-        )
+        |b| b.iter(|| {
+            simplify(black_box("(+ a (+ b (+ (* 0 c) d)))"));
+            //assert_eq!(result, "(+ d (+ b a))");
+        })
     );
 
-    //assert_eq!(simplify("(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)"), "a");
     c.bench_function(
         "foo",
-        |b| b.iter(||
-            simplify(black_box("(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)"))
-        )
+        |b| b.iter(|| {
+            let result =  simplify(black_box("(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)"));
+            assert_eq!(result, "a");
+        })
     );
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(benches, basic_math_benchmark);
 criterion_main!(benches);
-
