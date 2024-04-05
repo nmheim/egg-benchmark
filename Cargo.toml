@@ -14,10 +14,10 @@ log = "0.4.21"
 name = "prop_logic"
 harness = false
 
-# [[bench]]
-# name = "basic_math"
-# harness = false
-# 
-# [[bench]]
-# name = "calc_logic"
-# harness = false
+[[bench]]
+name = "basic_math"
+harness = false
+
+[[bench]]
+name = "calc_logic"
+harness = false
