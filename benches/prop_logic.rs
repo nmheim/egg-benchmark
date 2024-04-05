@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::{*, rewrite as rw};
-use egg_benchmark::prove;
+use egg_benchmark::{*};
 
 define_language! {
     pub enum PropositionalLogic {
@@ -82,19 +82,28 @@ pub fn propositional_logic_rules() -> Vec<Rewrite<PropositionalLogic, ()>> {
 
 pub fn propositional_logic_benchmark(c: &mut Criterion) {
     let rules = propositional_logic_rules();
-    let ex_orig = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s)))";
-    let ex_logic = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
+    // let ex_orig = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s)))";
+    let ex_logic: RecExpr<PropositionalLogic>
+        = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))"
+        .parse().unwrap();
 
-    assert!(prove(&ex_logic, &rules));
-    // c.bench_function( "demorgan",
-    //     |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules)))
-    // );
+    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
+    assert_eq!(simplify(&ex_logic, &rules, 3, 6, 5000), tru);
+    c.bench_function( "prove1",
+        |b| b.iter(|| simplify(black_box(&ex_logic), black_box(&rules), 2, 6, 5000))
+    );
 
-    // let frege = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    // assert!(prove(&frege, &rules));
-    // c.bench_function( "frege",
-    //     |b| b.iter(|| prove(black_box(&frege), black_box(&rules)))
-    // );
+    let demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
+    assert!(prove(&demorgan, &rules, 10, 5000));
+    c.bench_function( "demorgan",
+        |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules), 10, 5000))
+    );
+
+    let frege = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))";
+    assert!(prove(&frege, &rules, 10, 5000));
+    c.bench_function( "frege",
+        |b| b.iter(|| prove(black_box(&frege), black_box(&rules), 10, 5000))
+    );
 }
 
 criterion_group!(benches, propositional_logic_benchmark);

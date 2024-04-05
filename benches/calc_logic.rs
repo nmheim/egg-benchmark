@@ -81,15 +81,15 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
 pub fn calc_logic_benchmark(c: &mut Criterion) {
     let rules = calc_logic_rules();
     let demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
-    assert!(prove(&demorgan, &rules));
+    assert!(prove(&demorgan, &rules, 10, 5000));
     c.bench_function( "demorgan",
-        |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules)))
+        |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules), 10, 5000))
     );
 
     let frege = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    assert!(prove(&frege, &rules));
+    assert!(prove(&frege, &rules, 10, 5000));
     c.bench_function( "frege",
-        |b| b.iter(|| prove(black_box(&frege), black_box(&rules)))
+        |b| b.iter(|| prove(black_box(&frege), black_box(&rules), 10, 5000))
     );
 }
 

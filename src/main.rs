@@ -1,5 +1,5 @@
 use egg::{*, rewrite as rw};
-use egg_benchmark::prove;
+use egg_benchmark::{*};
 
 define_language! {
     pub enum PropositionalLogic {
@@ -81,20 +81,23 @@ pub fn propositional_logic_rules() -> Vec<Rewrite<PropositionalLogic, ()>> {
 
 pub fn main() {
     let rules = propositional_logic_rules();
-    let ex_orig = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s)))";
-    // let ex_logic = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
-    // ex_logic = "(!(p || q) == (!p && !q))";
-    let ex_logic = "(== (!! (|| p q)) (&& (!! p) (!!q)))";
 
-    println!("{}", prove(&ex_logic, &rules));
-    // c.bench_function( "demorgan",
-    //     |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules)))
-    // );
+    // demorgan
+    let ex_demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
+    println!("demorgan: {}", prove(&ex_demorgan, &rules, 10, 5000));
 
-    // let frege = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    // assert!(prove(&frege, &rules));
-    // c.bench_function( "frege",
-    //     |b| b.iter(|| prove(black_box(&frege), black_box(&rules)))
-    // );
+    // frege
+    let ex_frege = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))";
+    println!("frege:    {}", prove(&ex_frege, &rules, 10, 5000));
+
+    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
+    // let ex_logic = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s))";
+    let s = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
+    // let ex_logic = "(|| (|| q s) (!! (&& q (&& p (!! r)))))";
+    // let ex_logic = "(== p p)";
+    
+    let ex_logic: RecExpr<PropositionalLogic> = s.parse().unwrap();
+    let expr = simplify(&ex_logic, &rules, 2, 6, 5000);
+    println!("logic:    {}", tru.eq(&expr));
 }
 
