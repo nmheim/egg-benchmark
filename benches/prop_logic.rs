@@ -82,27 +82,38 @@ pub fn propositional_logic_rules() -> Vec<Rewrite<PropositionalLogic, ()>> {
 
 pub fn propositional_logic_benchmark(c: &mut Criterion) {
     let rules = propositional_logic_rules();
+    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
+
     // let ex_orig = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s)))";
     let ex_logic: RecExpr<PropositionalLogic>
         = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))"
         .parse().unwrap();
-
-    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
-    assert_eq!(simplify(&ex_logic, &rules, 3, 6, 5000), tru);
     c.bench_function( "prove1",
-        |b| b.iter(|| simplify(black_box(&ex_logic), black_box(&rules), 2, 6, 5000))
+        |b| b.iter(|| {
+            let result = simplify(black_box(&ex_logic), black_box(&rules), 3, 6, 5000);
+            assert_eq!(result, tru)
+        })
     );
 
-    let demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
-    assert!(prove(&demorgan, &rules, 10, 5000));
+    let demorgan: RecExpr<PropositionalLogic>
+        = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
+        .parse().unwrap();
     c.bench_function( "demorgan",
-        |b| b.iter(|| prove(black_box(&demorgan), black_box(&rules), 10, 5000))
+        |b| b.iter(|| {
+            let result = simplify(black_box(&demorgan), black_box(&rules), 1, 10, 5000);
+            assert_eq!(result, tru)
+        })
     );
 
-    let frege = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))";
-    assert!(prove(&frege, &rules, 10, 5000));
-    c.bench_function( "frege",
-        |b| b.iter(|| prove(black_box(&frege), black_box(&rules), 10, 5000))
+    let frege: RecExpr<PropositionalLogic>
+        = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
+        .parse().unwrap();
+    c.bench_function(
+        "frege",
+        |b| b.iter(|| {
+            let result = simplify(black_box(&frege), black_box(&rules), 1, 10, 5000);
+            assert_eq!(result, tru)
+        })
     );
 }
 
