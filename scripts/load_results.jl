@@ -12,6 +12,10 @@ function load_results(path::String)
     benchpaths = map(d -> joinpath(path, d, "new", "estimates.json"), dirs)
     crit_results = Dict(bench => JSON.parsefile(path) for (bench, path) in zip(dirs, benchpaths))
 
+    # v = crit_results |> values |> first
+    # v["median"] |> display
+    # v["mean"]["confidence_interval"] |> display
+
     # output point estimates
     Dict(
         bench => Dict(
