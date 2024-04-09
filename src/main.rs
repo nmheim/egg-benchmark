@@ -81,23 +81,25 @@ pub fn propositional_logic_rules() -> Vec<Rewrite<PropositionalLogic, ()>> {
 
 pub fn main() {
     let rules = propositional_logic_rules();
+    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
 
     // demorgan
-    let ex_demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
-    println!("demorgan: {}", prove(&ex_demorgan, &rules, 10, 5000));
+    let ex_demorgan: RecExpr<PropositionalLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
+        .parse().unwrap();
+    println!("demorgan: {}", simplify(&ex_demorgan, &rules, 10, 5000).eq(&tru));
 
     // frege
-    let ex_frege = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))";
-    println!("frege:    {}", prove(&ex_frege, &rules, 10, 5000));
+    let ex_frege: RecExpr<PropositionalLogic> = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
+        .parse().unwrap();
+    println!("frege:    {}", simplify(&ex_frege, &rules, 10, 5000));
 
-    let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
     // let ex_logic = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s))";
     let s = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
     // let ex_logic = "(|| (|| q s) (!! (&& q (&& p (!! r)))))";
     // let ex_logic = "(== p p)";
     
     let ex_logic: RecExpr<PropositionalLogic> = s.parse().unwrap();
-    let expr = simplify(&ex_logic, &rules, 2, 6, 5000);
+    let expr = prove(&ex_logic, &rules, 2, 6, 5000);
     println!("logic:    {}", tru.eq(&expr));
 }
 

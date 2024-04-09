@@ -15,7 +15,7 @@ name = "prop_logic"
 harness = false
 
 [[bench]]
-name = "basic_math"
+name = "basic_maths"
 harness = false
 
 [[bench]]

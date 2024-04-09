@@ -14,7 +14,7 @@ define_language! {
     }
 }
 
-pub fn basic_math_rules() -> Vec<Rewrite<BasicMath, ()>> {
+pub fn basic_maths_rules() -> Vec<Rewrite<BasicMath, ()>> {
     vec![
         // monoid +
         rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
@@ -73,7 +73,7 @@ pub fn simplify(s: &str) -> String {
 
     // simplify the expression using a Runner, which creates an e-graph with
     // the given expression and runs the given rules over it
-    let runner = Runner::default().with_expr(&expr).run(&basic_math_rules());
+    let runner = Runner::default().with_expr(&expr).run(&basic_maths_rules());
 
     // the Runner knows which e-class the expression given with `with_expr` is in
     let root = runner.roots[0];
@@ -85,9 +85,9 @@ pub fn simplify(s: &str) -> String {
 }
 
 
-pub fn basic_math_benchmark(c: &mut Criterion) {
+pub fn basic_maths_benchmark(c: &mut Criterion) {
     c.bench_function(
-        "simpl1",
+        "basic_maths/simpl1",
         |b| b.iter(|| {
             simplify(black_box("(+ a (+ b (+ (* 0 c) d)))"));
             //assert_eq!(result, "(+ d (+ b a))");
@@ -95,7 +95,7 @@ pub fn basic_math_benchmark(c: &mut Criterion) {
     );
 
     c.bench_function(
-        "foo",
+        "basic_maths/foo",
         |b| b.iter(|| {
             let result =  simplify(black_box("(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)"));
             assert_eq!(result, "a");
@@ -103,5 +103,5 @@ pub fn basic_math_benchmark(c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, basic_math_benchmark);
+criterion_group!(benches, basic_maths_benchmark);
 criterion_main!(benches);

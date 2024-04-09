@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use egg::*;
-use egg_benchmark::prove;
+use egg::{*};
+use egg_benchmark::{*};
 
 // ## Theory of Calculational Logic 
 // https://www.cs.cornell.edu/gries/Logic/Axioms.html
@@ -80,15 +80,23 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
 
 pub fn calc_logic_benchmark(c: &mut Criterion) {
     let rules = calc_logic_rules();
+    let tru: RecExpr<CalcLogic> = "true".parse().unwrap();
 
-    let demorgan = "(== (!! (|| p q)) (&& (!! p) (!! q)))";
-    c.bench_function( "demorgan",
-        |b| b.iter(|| assert!(prove(black_box(&demorgan), black_box(&rules), 10, 5000)))
+    let demorgan: RecExpr<CalcLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
+    c.bench_function( "calc_logic/demorgan",
+        |b| b.iter(|| {
+            let res = simplify(black_box(&demorgan), black_box(&rules), 10, 5000);
+            assert!(tru.eq(&res))
+        })
     );
 
-    let frege = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))";
-    c.bench_function( "frege",
-        |b| b.iter(|| assert!(prove(black_box(&frege), black_box(&rules), 10, 5000)))
+    let frege: RecExpr<CalcLogic> = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))"
+        .parse().unwrap();
+    c.bench_function( "calc_logic/freges_theorem",
+        |b| b.iter(|| {
+            let res = simplify(black_box(&frege), black_box(&rules), 10, 5000);
+            assert!(tru.eq(&res))
+        })
     );
 }
 

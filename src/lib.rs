@@ -1,22 +1,19 @@
 use egg::{*};
 
 
-pub fn prove<L: Language + FromOp>(
-    s: &str,
+pub fn simplify<L: Language>(
+    expr: &RecExpr<L>,
     rules: &Vec<Rewrite<L, ()>>,
     timeout: usize,
     eclasslimit: usize,
-) -> bool {
-    // parse input string to logic expression
-    let expr: RecExpr<L> = s.parse().unwrap();
-
+) -> RecExpr<L> {
     // run rules
     let runner = saturate(&expr, rules, timeout, eclasslimit);
 
-    // check if expr and `true` are in the same eclass
-    let t: RecExpr<L> = "true".parse().unwrap();
-    let r = runner.egraph.equivs(&expr, &t);
-    r.len() > 0
+    // extract shortest expression
+    let extractor = Extractor::new(&runner.egraph, AstSize);
+    let (_, best) = extractor.find_best(runner.roots[0]);
+    best
 }
 
 
@@ -39,7 +36,7 @@ pub fn saturate<L: Language>(
 }
 
 
-pub fn simplify<L: Language>(
+pub fn prove<L: Language>(
     expr: &RecExpr<L>,
     rules: &Vec<Rewrite<L, ()>>,
     steps: usize,
