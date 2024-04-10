@@ -10,13 +10,13 @@ function load_results(path::String)
 
     # read results
     benchpaths = map(d -> joinpath(path, d, "new", "estimates.json"), dirs)
-    crit_results = Dict(bench => JSON.parsefile(path) for (bench, path) in zip(dirs, benchpaths))
+    crit_results = OrderedDict(bench => JSON.parsefile(path) for (bench, path) in zip(dirs, benchpaths))
 
     z75 = 1.15
     z95 = 1.96
 
     # output point estimates
-    Dict(
+    OrderedDict(
         bench => Dict(
             "median"=> d["median"]["point_estimate"],
             "mean"  => d["mean"]["point_estimate"],
@@ -29,11 +29,17 @@ function load_results(path::String)
 end
 
 
-results = AirspeedVelocity.load_results(
-    "Metatheory", ["nh/benchmark"],
+MT_BRANCH = "nh/simpl2"
+
+air = AirspeedVelocity.load_results(
+    "Metatheory", [MT_BRANCH],
     input_dir="/Users/niklas/.julia/dev/Metatheory/results"
 )
-results["egg"] = load_results(joinpath(".", "target", "criterion"))
+
+results = OrderedDict(
+    "egg" => load_results(joinpath(".", "target", "criterion")),
+    "Metatheory" => air[MT_BRANCH],
+)
 
 new_res = OrderedDict(
     rev => OrderedDict(

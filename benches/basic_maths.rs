@@ -95,7 +95,7 @@ pub fn basic_maths_benchmark(c: &mut Criterion) {
     );
 
     c.bench_function(
-        "basic_maths/foo",
+        "basic_maths/simpl2",
         |b| b.iter(|| {
             let result =  simplify(black_box("(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)"));
             assert_eq!(result, "a");

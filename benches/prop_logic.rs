@@ -90,7 +90,7 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         .parse().unwrap();
     c.bench_function( "prop_logic/prove1",
         |b| b.iter(|| {
-            let result = prove(black_box(&ex_logic), black_box(&rules), 3, 6, 5000);
+            let result = prove(black_box(&ex_logic), black_box(&rules), 2, 6, &tru);
             assert_eq!(result, tru)
         })
     );
@@ -100,7 +100,7 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         .parse().unwrap();
     c.bench_function( "prop_logic/demorgan",
         |b| b.iter(|| {
-            let result = prove(black_box(&demorgan), black_box(&rules), 1, 10, 5000);
+            let result = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
             assert_eq!(result, tru)
         })
     );
@@ -111,7 +111,7 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
     c.bench_function(
         "prop_logic/freges_theorem",
         |b| b.iter(|| {
-            let result = prove(black_box(&frege), black_box(&rules), 1, 10, 5000);
+            let result = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
             assert_eq!(result, tru)
         })
     );
