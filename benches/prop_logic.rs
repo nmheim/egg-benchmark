@@ -109,7 +109,7 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
         .parse().unwrap();
     c.bench_function(
-        "prop_logic/frege",
+        "prop_logic/freges_theorem",
         |b| b.iter(|| {
             let result = prove(black_box(&frege), black_box(&rules), 1, 10, 5000);
             assert_eq!(result, tru)

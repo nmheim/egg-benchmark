@@ -12,16 +12,17 @@ function load_results(path::String)
     benchpaths = map(d -> joinpath(path, d, "new", "estimates.json"), dirs)
     crit_results = Dict(bench => JSON.parsefile(path) for (bench, path) in zip(dirs, benchpaths))
 
-    # v = crit_results |> values |> first
-    # v["median"] |> display
-    # v["mean"]["confidence_interval"] |> display
+    z75 = 1.15
+    z95 = 1.96
 
     # output point estimates
     Dict(
         bench => Dict(
             "median"=> d["median"]["point_estimate"],
             "mean"  => d["mean"]["point_estimate"],
-            "std"   => d["std_dev"]["point_estimate"]
+            "std"   => d["std_dev"]["point_estimate"],
+            "75"    => d["median"]["confidence_interval"]["upper_bound"] * z75/z95,
+            "25"    => d["median"]["confidence_interval"]["lower_bound"] * z75/z95,
         )
         for (bench, d) in crit_results
     )
@@ -37,7 +38,7 @@ results["egg"] = load_results(joinpath(".", "target", "criterion"))
 new_res = OrderedDict(
     rev => OrderedDict(
          replace(k, "/"=>"_") => v for (k,v) in d
-    ) for (rev, d) in air_res
+    ) for (rev, d) in results
 )
 
 AirspeedVelocity.create_table(new_res) |> print
