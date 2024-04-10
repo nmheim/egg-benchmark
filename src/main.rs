@@ -1,5 +1,6 @@
 use egg::{*, rewrite as rw};
 use egg_benchmark::{*};
+use std::time::Instant;
 
 define_language! {
     pub enum PropositionalLogic {
@@ -83,15 +84,32 @@ pub fn main() {
     let rules = propositional_logic_rules();
     let tru: RecExpr<PropositionalLogic> = "true".parse().unwrap();
 
+    // ===========================================
+
+    let apply_time: std::time::Instant = Instant::now();
+    
     // demorgan
     let ex_demorgan: RecExpr<PropositionalLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
         .parse().unwrap();
-    println!("demorgan: {}", simplify(&ex_demorgan, &rules, 10, 5000).eq(&tru));
+    println!("demorgan: {}", prove(&ex_demorgan, &rules, 1, 10, &tru));
+
+    println!("simplification time {}", apply_time.elapsed().as_secs_f64());
+
+    // ===========================================
+
+    let apply_time: std::time::Instant = Instant::now();
 
     // frege
     let ex_frege: RecExpr<PropositionalLogic> = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
         .parse().unwrap();
-    println!("frege:    {}", simplify(&ex_frege, &rules, 10, 5000));
+    println!("frege:    {}", prove(&ex_frege, &rules, 1, 10, &tru));
+
+    println!("simplification time {}", apply_time.elapsed().as_secs_f64());
+
+
+    // ===========================================
+
+    let apply_time: std::time::Instant = Instant::now();
 
     // let ex_logic = "(=> (&& (&& (=> p q) (=> r s)) (|| p r)) (|| q s))";
     let s = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))";
@@ -99,7 +117,9 @@ pub fn main() {
     // let ex_logic = "(== p p)";
     
     let ex_logic: RecExpr<PropositionalLogic> = s.parse().unwrap();
-    let expr = prove(&ex_logic, &rules, 2, 6, 5000);
+    let expr = prove(&ex_logic, &rules, 2, 6, &tru);
     println!("logic:    {}", tru.eq(&expr));
+
+    println!("simplification time {}", apply_time.elapsed().as_secs_f64());
 }
 

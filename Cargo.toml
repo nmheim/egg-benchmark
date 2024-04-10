@@ -9,6 +9,7 @@ edition = "2021"
 criterion = "0.5.1"
 egg = "0.9.5"
 log = "0.4.21"
+rand = "0.8.5"
 
 [[bench]]
 name = "prop_logic"
@@ -20,4 +21,8 @@ harness = false
 
 [[bench]]
 name = "calc_logic"
+harness = false
+
+[[bench]]
+name = "egraph"
 harness = false

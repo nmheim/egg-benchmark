@@ -29,11 +29,14 @@ function load_results(path::String)
 end
 
 
-results = AirspeedVelocity.load_results(
+air = AirspeedVelocity.load_results(
     "Metatheory", ["nh/benchmark"],
     input_dir="/Users/niklas/.julia/dev/Metatheory/results"
 )
-results["egg"] = load_results(joinpath(".", "target", "criterion"))
+results = OrderedDict(
+    "egg" => load_results(joinpath(".", "target", "criterion")),
+    "Metatheory" => air["nh/benchmark"],
+)
 
 new_res = OrderedDict(
     rev => OrderedDict(
