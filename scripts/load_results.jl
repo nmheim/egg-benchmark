@@ -36,8 +36,14 @@ air = AirspeedVelocity.load_results(
     input_dir="/Users/niklas/.julia/dev/Metatheory/results"
 )
 
+egg = load_results(joinpath(".", "target", "criterion"))
+
+egg_customlang = Dict(k=>v for (k,v) in egg if occursin("customlang", k))
+egg_symbollang = Dict(k=>v for (k,v) in egg if k ∉ keys(egg_customlang))
+egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customlang)
 results = OrderedDict(
-    "egg" => load_results(joinpath(".", "target", "criterion")),
+    "egg-symbollang" => egg_symbollang,
+    "egg-customlang" => egg_customlang,
     "Metatheory" => air[MT_BRANCH],
 )
 

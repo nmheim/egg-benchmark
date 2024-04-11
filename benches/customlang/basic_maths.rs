@@ -69,7 +69,7 @@ pub fn basic_maths_rules() -> Vec<Rewrite<BasicMath, ()>> {
 
 pub fn basic_maths_benchmark(c: &mut Criterion) {
     c.bench_function(
-        "basic_maths/simpl1",
+        "customlang/basic_maths/simpl1",
         |b| b.iter(|| {
             let expr: RecExpr<BasicMath> = "(+ a (+ b (+ (* 0 c) d)))".parse().unwrap();
 
@@ -79,7 +79,7 @@ pub fn basic_maths_benchmark(c: &mut Criterion) {
     );
 
     c.bench_function(
-        "basic_maths/simpl2",
+        "customlang/basic_maths/simpl2",
         |b| b.iter(|| {
             let expr = "(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)".parse().unwrap();
             let result =  simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);

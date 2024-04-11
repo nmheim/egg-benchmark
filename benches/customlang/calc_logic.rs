@@ -83,7 +83,8 @@ pub fn calc_logic_benchmark(c: &mut Criterion) {
     let tru: RecExpr<CalcLogic> = "true".parse().unwrap();
 
     let demorgan: RecExpr<CalcLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
-    c.bench_function( "calc_logic/demorgan",
+    c.bench_function(
+        "customlang/calc_logic/demorgan",
         |b| b.iter(|| {
             let res = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
             assert!(tru.eq(&res))
@@ -92,7 +93,8 @@ pub fn calc_logic_benchmark(c: &mut Criterion) {
 
     let frege: RecExpr<CalcLogic> = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))"
         .parse().unwrap();
-    c.bench_function( "calc_logic/freges_theorem",
+    c.bench_function(
+        "customlang/calc_logic/freges_theorem",
         |b| b.iter(|| {
             let res = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
             assert!(tru.eq(&res))
