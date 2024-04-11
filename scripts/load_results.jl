@@ -29,7 +29,7 @@ function load_results(path::String)
 end
 
 
-MT_BRANCH = "nh/simpl2"
+MT_BRANCH = "ale/3.0"
 
 air = AirspeedVelocity.load_results(
     "Metatheory", [MT_BRANCH],
