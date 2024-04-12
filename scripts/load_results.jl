@@ -62,7 +62,7 @@ AirspeedVelocity.create_table(
 ) |> print
 AirspeedVelocity.create_table(
     OrderedDict(
-        "egg-customlang" => new_res["egg-symbollang"],
+        "egg-customlang" => new_res["egg-customlang"],
         "Metatheory" => new_res["Metatheory"],
     )
 ) |> print
