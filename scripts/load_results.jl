@@ -2,6 +2,23 @@ using JSON
 using OrderedCollections
 using AirspeedVelocity
 using Printf: @sprintf
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    "--run"
+        help = "Run the benchmarks"
+        action = :store_true
+    "--with-confidence", "-c"
+        help = "Print confidence intervals in table."
+        action = :store_true
+end
+parsed_args = parse_args(ARGS, s)
+MT_30 = "ale/3.0"
+MT_20 = "master"
+MT_RESULTS_DIR = joinpath(pwd(), "target", "Metatheory")
+
+@info parsed_args
 
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
@@ -64,13 +81,7 @@ function ratio_column!(combined_results, c1, c2, key="median")
 end
 
 
-RUN = length(ARGS)>1 && "--run" == ARGS[1] ? true : false
-MT_30 = "ale/3.0"
-MT_20 = "master"
-WITH_CONFIDENCE = false
-MT_RESULTS_DIR = joinpath(pwd(), "target", "Metatheory")
-
-if RUN
+if parsed_args["run"]
     # run egg benches
     run(`cargo bench`)
 
@@ -107,4 +118,4 @@ ratio_column!(new_res, "egg-sym", "MT@3.0")
 ratio_column!(new_res, "egg-cust", "MT@3.0")
 ratio_column!(new_res, "MT@2.0", "MT@3.0")
 AirspeedVelocity.create_table(
-    new_res, formatter=v->format_val(v;confidence_interval=WITH_CONFIDENCE)) |> print
+    new_res, formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])) |> print
