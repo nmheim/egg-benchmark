@@ -1,6 +1,7 @@
 using JSON
 using OrderedCollections
 using AirspeedVelocity
+using Printf: @sprintf
 
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
@@ -28,11 +29,47 @@ function load_results(path::String)
     )
 end
 
+function format_val(val::Dict)
+    # unit, unit_name = AirspeedVelocity.TableUtils.get_reasonable_time_unit([val["median"]])
+    unit, unit_name = 1e-3, "μs"
+    if haskey(val, "75")
+        @sprintf(
+            "%.3f ± %.2f %s",
+            val["median"] * unit,
+            (val["75"] - val["25"]) * unit,
+            unit_name
+        )
+    elseif haskey(val, "median")
+        @sprintf("%.3g %s", val["median"] * unit, unit_name)
+    else
+        @sprintf("%.3g", val["speedup"])
+    end
+end
+format_val(::Missing) = @sprintf("")
 
-MT_BRANCH = "ale/3.0"
+function ratio_column!(combined_results, c1, c2, key="median")
+    all_keys = combined_results[c1] |> keys
+    col = OrderedDict{String,Dict}()
+    for row in all_keys
+        if haskey(combined_results[c2], row)
+            a = combined_results[c1][row][key]
+            b = combined_results[c2][row][key]
+            ratio = a/b
+            col[row] = Dict("speedup"=>a/b)
+        end
+    end
+
+    combined_results["$c1/$c2"] = col
+    combined_results
+end
+
+
+
+MT_30 = "ale/3.0"
+MT_20 = "master"
 
 air = AirspeedVelocity.load_results(
-    "Metatheory", [MT_BRANCH],
+    "Metatheory", [MT_30, MT_20],
     input_dir="/Users/niklas/.julia/dev/Metatheory/results"
 )
 
@@ -42,9 +79,10 @@ egg_customlang = Dict(k=>v for (k,v) in egg if occursin("customlang", k))
 egg_symbollang = Dict(k=>v for (k,v) in egg if k ∉ keys(egg_customlang))
 egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customlang)
 results = OrderedDict(
-    "egg-symbollang" => egg_symbollang,
-    "egg-customlang" => egg_customlang,
-    "Metatheory" => air[MT_BRANCH],
+    "egg-sym" => egg_symbollang,
+    "egg-cust" => egg_customlang,
+    "MT@3.0" => air[MT_30],
+    "MT@2.0" => air[MT_20],
 )
 
 new_res = OrderedDict(
@@ -53,17 +91,8 @@ new_res = OrderedDict(
     ) for (rev, d) in results
 )
 
-AirspeedVelocity.create_table(new_res) |> print
-AirspeedVelocity.create_table(
-    OrderedDict(
-        "egg-symbollang" => new_res["egg-symbollang"],
-        "Metatheory" => new_res["Metatheory"],
-    )
-) |> print
-AirspeedVelocity.create_table(
-    OrderedDict(
-        "egg-customlang" => new_res["egg-customlang"],
-        "Metatheory" => new_res["Metatheory"],
-    )
-) |> print
 
+ratio_column!(new_res, "egg-sym", "MT@3.0")
+ratio_column!(new_res, "egg-cust", "MT@3.0")
+ratio_column!(new_res, "MT@2.0", "MT@3.0")
+AirspeedVelocity.create_table(new_res, formatter=format_val) |> print
