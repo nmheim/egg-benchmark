@@ -29,8 +29,8 @@ function load_results(path::String)
     )
 end
 
-function format_val(val::Dict)
-    if haskey(val, "75")
+function format_val(val::Dict; confidence_interval=true)
+    if haskey(val, "75") && confidence_interval
         unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
         @sprintf(
             "%.3f ± %.2f %s",
@@ -45,7 +45,7 @@ function format_val(val::Dict)
         @sprintf("%.3g", val["speedup"])
     end
 end
-format_val(::Missing) = @sprintf("")
+format_val(::Missing; kw...) = @sprintf("")
 
 function ratio_column!(combined_results, c1, c2, key="median")
     all_keys = combined_results[c1] |> keys
@@ -64,9 +64,20 @@ function ratio_column!(combined_results, c1, c2, key="median")
 end
 
 
-
+RUN = false
 MT_30 = "ale/3.0"
 MT_20 = "master"
+WITH_CONFIDENCE = false
+MT_RESULTS_DIR = joinpath(pwd(), "target", "Metatheory")
+
+if RUN
+    # run egg benches
+    run(`cargo bench`)
+
+    # run benchpkg on Metatheory
+    isdir(MT_RESULTS_DIR) || mkdir(MT_RESULTS_DIR)
+    run(`$(homedir())/.julia/bin/benchpkg Metatheory -r $MT_30,$MT_20 --bench-on=$MT_30 --output-dir=$MT_RESULTS_DIR`)
+end
 
 air = AirspeedVelocity.load_results(
     "Metatheory", [MT_30, MT_20],
@@ -95,4 +106,5 @@ new_res = OrderedDict(
 ratio_column!(new_res, "egg-sym", "MT@3.0")
 ratio_column!(new_res, "egg-cust", "MT@3.0")
 ratio_column!(new_res, "MT@2.0", "MT@3.0")
-AirspeedVelocity.create_table(new_res, formatter=format_val) |> print
+AirspeedVelocity.create_table(
+    new_res, formatter=v->format_val(v;confidence_interval=WITH_CONFIDENCE)) |> print
