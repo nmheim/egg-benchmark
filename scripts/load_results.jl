@@ -54,3 +54,16 @@ new_res = OrderedDict(
 )
 
 AirspeedVelocity.create_table(new_res) |> print
+AirspeedVelocity.create_table(
+    OrderedDict(
+        "egg-symbollang" => new_res["egg-symbollang"],
+        "Metatheory" => new_res["Metatheory"],
+    )
+) |> print
+AirspeedVelocity.create_table(
+    OrderedDict(
+        "egg-customlang" => new_res["egg-symbollang"],
+        "Metatheory" => new_res["Metatheory"],
+    )
+) |> print
+
