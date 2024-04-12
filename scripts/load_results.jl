@@ -18,8 +18,6 @@ MT_30 = "ale/3.0"
 MT_20 = "master"
 MT_RESULTS_DIR = joinpath(pwd(), "target", "Metatheory")
 
-@info parsed_args
-
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
 
