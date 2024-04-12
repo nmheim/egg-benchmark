@@ -30,9 +30,8 @@ function load_results(path::String)
 end
 
 function format_val(val::Dict)
-    # unit, unit_name = AirspeedVelocity.TableUtils.get_reasonable_time_unit([val["median"]])
-    unit, unit_name = 1e-3, "μs"
     if haskey(val, "75")
+        unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
         @sprintf(
             "%.3f ± %.2f %s",
             val["median"] * unit,
@@ -40,6 +39,7 @@ function format_val(val::Dict)
             unit_name
         )
     elseif haskey(val, "median")
+        unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
         @sprintf("%.3g %s", val["median"] * unit, unit_name)
     else
         @sprintf("%.3g", val["speedup"])
@@ -81,8 +81,8 @@ egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customla
 results = OrderedDict(
     "egg-sym" => egg_symbollang,
     "egg-cust" => egg_customlang,
-    "MT@3.0" => air[MT_30],
     "MT@2.0" => air[MT_20],
+    "MT@3.0" => air[MT_30],
 )
 
 new_res = OrderedDict(
