@@ -64,7 +64,7 @@ function ratio_column!(combined_results, c1, c2, key="median")
 end
 
 
-RUN = false
+RUN = length(ARGS)>1 && "--run" == ARGS[1] ? true : false
 MT_30 = "ale/3.0"
 MT_20 = "master"
 WITH_CONFIDENCE = false
