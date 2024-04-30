@@ -33,7 +33,7 @@ define_language! {
 
 
 
-pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
+pub fn calc_logic_rules() -> Vec<Rewrite<SymbolLang, ()>> {
     vec![
         // ((p == q) == r) == (p == (q == r))      # Associativity of ==: 
         rewrite!("==-assoc"; "(== (== ?p ?q) ?r)" <=> "(== ?p (== ?q ?r))"),
@@ -80,9 +80,9 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
 
 pub fn calc_logic_benchmark(c: &mut Criterion) {
     let rules = calc_logic_rules();
-    let tru: RecExpr<CalcLogic> = "true".parse().unwrap();
+    let tru: RecExpr<SymbolLang> = "true".parse().unwrap();
 
-    let demorgan: RecExpr<CalcLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
+    let demorgan: RecExpr<SymbolLang> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
     c.bench_function( "calc_logic/demorgan",
         |b| b.iter(|| {
             let res = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
@@ -90,7 +90,7 @@ pub fn calc_logic_benchmark(c: &mut Criterion) {
         })
     );
 
-    let frege: RecExpr<CalcLogic> = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))"
+    let frege: RecExpr<SymbolLang> = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))"
         .parse().unwrap();
     c.bench_function( "calc_logic/freges_theorem",
         |b| b.iter(|| {

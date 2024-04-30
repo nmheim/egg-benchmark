@@ -12,17 +12,5 @@ log = "0.4.21"
 rand = "0.8.5"
 
 [[bench]]
-name = "prop_logic"
-harness = false
-
-[[bench]]
-name = "basic_maths"
-harness = false
-
-[[bench]]
-name = "calc_logic"
-harness = false
-
-[[bench]]
-name = "egraph"
+name = "benchmarks"
 harness = false

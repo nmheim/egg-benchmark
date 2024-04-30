@@ -88,7 +88,8 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
     let ex_logic: RecExpr<PropositionalLogic>
         = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))"
         .parse().unwrap();
-    c.bench_function( "prop_logic/prove1",
+    c.bench_function(
+        "customlang/prop_logic/prove1",
         |b| b.iter(|| {
             let result = prove(black_box(&ex_logic), black_box(&rules), 2, 6, &tru);
             assert_eq!(result, tru)
@@ -98,7 +99,8 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
     let demorgan: RecExpr<PropositionalLogic>
         = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
         .parse().unwrap();
-    c.bench_function( "prop_logic/demorgan",
+    c.bench_function(
+        "customlang/prop_logic/demorgan",
         |b| b.iter(|| {
             let result = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
             assert_eq!(result, tru)
@@ -109,7 +111,7 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
         .parse().unwrap();
     c.bench_function(
-        "prop_logic/freges_theorem",
+        "customlang/prop_logic/freges_theorem",
         |b| b.iter(|| {
             let result = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
             assert_eq!(result, tru)

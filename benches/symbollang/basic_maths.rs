@@ -15,7 +15,7 @@ define_language! {
     }
 }
 
-pub fn basic_maths_rules() -> Vec<Rewrite<BasicMath, ()>> {
+pub fn basic_maths_rules() -> Vec<Rewrite<SymbolLang, ()>> {
     vec![
         // monoid +
         rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
@@ -66,23 +66,22 @@ pub fn basic_maths_rules() -> Vec<Rewrite<BasicMath, ()>> {
 }
 
 
-
 pub fn basic_maths_benchmark(c: &mut Criterion) {
+    let rules = basic_maths_rules();
+    let expr = "(+ a (+ b (+ (* 0 c) d)))".parse().unwrap();
     c.bench_function(
         "basic_maths/simpl1",
         |b| b.iter(|| {
-            let expr: RecExpr<BasicMath> = "(+ a (+ b (+ (* 0 c) d)))".parse().unwrap();
-
-            simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
+            simplify(black_box(&expr), black_box(&rules), 8);
             //assert_eq!(result, "(+ d (+ b a))");
         })
     );
 
+    let expr = "(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)".parse().unwrap();
     c.bench_function(
         "basic_maths/simpl2",
         |b| b.iter(|| {
-            let expr = "(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)".parse().unwrap();
-            let result =  simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
+            let result =  simplify(black_box(&expr), black_box(&rules), 8);
             assert_eq!(result, "a".parse().unwrap());
         })
     );
