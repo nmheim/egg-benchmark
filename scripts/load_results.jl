@@ -6,17 +6,20 @@ using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    "--run"
-        help = "Run the benchmarks"
-        action = :store_true
     "--with-confidence", "-c"
         help = "Print confidence intervals in table."
         action = :store_true
+    "--mt-results"
+        help = "Results directory of Metatheory benchmark."
+        arg_type = String
+    "--branches", "-b"
+        help = "Branches to benchmark. Pass multiple with: -b BRANCH1 -b BRANCH2 ..."
+        arg_type = String
+        action = :append_arg
 end
 parsed_args = parse_args(ARGS, s)
-MT_30 = "ale/3.0"
-MT_20 = "master"
-MT_RESULTS_DIR = joinpath(pwd(), "target", "Metatheory")
+MT_RESULTS_DIR = parsed_args["mt-results"]
+BRANCHES = parsed_args["branches"]
 
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
@@ -79,18 +82,9 @@ function ratio_column!(combined_results, c1, c2, key="median")
 end
 
 
-if parsed_args["run"]
-    # run egg benches
-    run(`cargo bench`)
-
-    # run benchpkg on Metatheory
-    isdir(MT_RESULTS_DIR) || mkdir(MT_RESULTS_DIR)
-    run(`$(homedir())/.julia/bin/benchpkg Metatheory -r $MT_30,$MT_20 --bench-on=$MT_30 --output-dir=$MT_RESULTS_DIR`)
-end
-
 air = AirspeedVelocity.load_results(
-    "Metatheory", [MT_30, MT_20],
-    input_dir="/Users/niklas/.julia/dev/Metatheory/results"
+    "Metatheory", BRANCHES,
+    input_dir=MT_RESULTS_DIR
 )
 
 egg = load_results(joinpath(".", "target", "criterion"))
@@ -101,9 +95,11 @@ egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customla
 results = OrderedDict(
     "egg-sym" => egg_symbollang,
     "egg-cust" => egg_customlang,
-    "MT@2.0" => air[MT_20],
-    "MT@3.0" => air[MT_30],
 )
+
+for br in BRANCHES
+    results["MT@$br"] = air[br]
+end
 
 new_res = OrderedDict(
     rev => OrderedDict(
@@ -112,8 +108,13 @@ new_res = OrderedDict(
 )
 
 
-ratio_column!(new_res, "egg-sym", "MT@3.0")
-ratio_column!(new_res, "egg-cust", "MT@3.0")
-ratio_column!(new_res, "MT@2.0", "MT@3.0")
+
+ratio_column!(new_res, "egg-sym", "MT@$(BRANCHES[1])")
+ratio_column!(new_res, "egg-cust", "MT@$(BRANCHES[1])")
+for b2 in BRANCHES[2:end]
+    ratio_column!(new_res, "MT@$b2", "MT@$(BRANCHES[1])")
+end
 AirspeedVelocity.create_table(
-    new_res, formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])) |> print
+    new_res,
+    formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])
+) |> print
