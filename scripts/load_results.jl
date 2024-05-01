@@ -16,10 +16,16 @@ s = ArgParseSettings()
         help = "Branches to benchmark. Pass multiple with: -b BRANCH1 -b BRANCH2 ..."
         arg_type = String
         action = :append_arg
+    "--output", "-o"
+        help = "File to store the table"
+        arg_type = String
 end
 parsed_args = parse_args(ARGS, s)
 MT_RESULTS_DIR = parsed_args["mt-results"]
 BRANCHES = parsed_args["branches"]
+OUTPUT = parsed_args["output"]
+
+display(parsed_args)
 
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
@@ -114,7 +120,16 @@ ratio_column!(new_res, "egg-cust", "MT@$(BRANCHES[1])")
 for b2 in BRANCHES[2:end]
     ratio_column!(new_res, "MT@$b2", "MT@$(BRANCHES[1])")
 end
-AirspeedVelocity.create_table(
+table = AirspeedVelocity.create_table(
     new_res,
     formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])
-) |> print
+)
+
+if isnothing(OUTPUT)
+    print(table)
+else
+    @info "Saving table at $(OUTPUT)"
+    open(OUTPUT, "w") do io
+        write(io, table)
+    end
+end
