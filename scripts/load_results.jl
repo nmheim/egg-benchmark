@@ -130,11 +130,10 @@ table = AirspeedVelocity.create_table(
     formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])
 )
 
-if isnothing(OUTPUT)
-    print(table)
-else
+if !isnothing(OUTPUT)
     @info "Saving table at $(OUTPUT)"
     open(OUTPUT, "w") do io
         write(io, table)
     end
 end
+print(table)
