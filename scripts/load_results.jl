@@ -12,6 +12,10 @@ s = ArgParseSettings()
     "--mt-results"
         help = "Results directory of Metatheory benchmark."
         arg_type = String
+    "--egg-results"
+        help = "Results directory of egg benchmark."
+        arg_type = String
+        default = joinpath(".", "target", "criterion")
     "--branches", "-b"
         help = "Branches to benchmark. Pass multiple with: -b BRANCH1 -b BRANCH2 ..."
         arg_type = String
@@ -22,6 +26,7 @@ s = ArgParseSettings()
 end
 parsed_args = parse_args(ARGS, s)
 MT_RESULTS_DIR = parsed_args["mt-results"]
+EGG_RESULTS_DIR = parsed_args["egg-results"]
 BRANCHES = parsed_args["branches"]
 OUTPUT = parsed_args["output"]
 
@@ -93,7 +98,7 @@ air = AirspeedVelocity.load_results(
     input_dir=MT_RESULTS_DIR
 )
 
-egg = load_results(joinpath(".", "target", "criterion"))
+egg = load_results(EGG_RESULTS_DIR)
 
 egg_customlang = Dict(k=>v for (k,v) in egg if occursin("customlang", k))
 egg_symbollang = Dict(k=>v for (k,v) in egg if k ∉ keys(egg_customlang))
