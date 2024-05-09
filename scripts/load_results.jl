@@ -29,11 +29,11 @@ function load_results(path::String)
 end
 
 
-MT_BRANCH = "ale/3.0"
+MT_BRANCH = "dirty"
 
 air = AirspeedVelocity.load_results(
     "Metatheory", [MT_BRANCH],
-    input_dir="/Users/niklas/.julia/dev/Metatheory/results"
+    input_dir="/home/sea/src/julia/Metatheory.jl/"
 )
 
 egg = load_results(joinpath(".", "target", "criterion"))
