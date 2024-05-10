@@ -1,6 +1,36 @@
 using JSON
 using OrderedCollections
 using AirspeedVelocity
+using Printf: @sprintf
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    "--with-confidence", "-c"
+        help = "Print confidence intervals in table."
+        action = :store_true
+    "--mt-results"
+        help = "Results directory of Metatheory benchmark."
+        arg_type = String
+    "--egg-results"
+        help = "Results directory of egg benchmark."
+        arg_type = String
+        default = joinpath(".", "target", "criterion")
+    "--branches", "-b"
+        help = "Branches to benchmark. Pass multiple with: -b BRANCH1 -b BRANCH2 ..."
+        arg_type = String
+        action = :append_arg
+    "--output", "-o"
+        help = "File to store the table"
+        arg_type = String
+end
+parsed_args = parse_args(ARGS, s)
+MT_RESULTS_DIR = parsed_args["mt-results"]
+EGG_RESULTS_DIR = parsed_args["egg-results"]
+BRANCHES = parsed_args["branches"]
+OUTPUT = parsed_args["output"]
+
+display(parsed_args)
 
 function load_results(path::String)
     (_, dirs, _) = walkdir(path) |> first
@@ -28,24 +58,59 @@ function load_results(path::String)
     )
 end
 
+function format_val(val::Dict; confidence_interval=true)
+    if haskey(val, "75") && confidence_interval
+        unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
+        @sprintf(
+            "%.3f ± %.2f %s",
+            val["median"] * unit,
+            (val["75"] - val["25"]) * unit,
+            unit_name
+        )
+    elseif haskey(val, "median")
+        unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
+        @sprintf("%.3g %s", val["median"] * unit, unit_name)
+    else
+        @sprintf("%.3g", val["speedup"])
+    end
+end
+format_val(::Missing; kw...) = @sprintf("")
 
-MT_BRANCH = "dirty"
+function ratio_column!(combined_results, c1, c2, key="median")
+    all_keys = combined_results[c1] |> keys
+    col = OrderedDict{String,Dict}()
+    for row in all_keys
+        if haskey(combined_results[c2], row)
+            a = combined_results[c1][row][key]
+            b = combined_results[c2][row][key]
+            ratio = a/b
+            col[row] = Dict("speedup"=>a/b)
+        end
+    end
+
+    combined_results["$c1/$c2"] = col
+    combined_results
+end
+
 
 air = AirspeedVelocity.load_results(
-    "Metatheory", [MT_BRANCH],
-    input_dir="/home/sea/src/julia/Metatheory.jl/"
+    "Metatheory", BRANCHES,
+    input_dir=MT_RESULTS_DIR
 )
 
-egg = load_results(joinpath(".", "target", "criterion"))
+egg = load_results(EGG_RESULTS_DIR)
 
 egg_customlang = Dict(k=>v for (k,v) in egg if occursin("customlang", k))
 egg_symbollang = Dict(k=>v for (k,v) in egg if k ∉ keys(egg_customlang))
 egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customlang)
 results = OrderedDict(
-    "egg-symbollang" => egg_symbollang,
-    "egg-customlang" => egg_customlang,
-    "Metatheory" => air[MT_BRANCH],
+    "egg-sym" => egg_symbollang,
+    "egg-cust" => egg_customlang,
 )
+
+for br in BRANCHES
+    results["MT@$br"] = air[br]
+end
 
 new_res = OrderedDict(
     rev => OrderedDict(
@@ -53,4 +118,22 @@ new_res = OrderedDict(
     ) for (rev, d) in results
 )
 
-AirspeedVelocity.create_table(new_res) |> print
+
+
+ratio_column!(new_res, "egg-sym", "MT@$(BRANCHES[1])")
+ratio_column!(new_res, "egg-cust", "MT@$(BRANCHES[1])")
+for b2 in BRANCHES[2:end]
+    ratio_column!(new_res, "MT@$b2", "MT@$(BRANCHES[1])")
+end
+table = AirspeedVelocity.create_table(
+    new_res,
+    formatter=v->format_val(v;confidence_interval=parsed_args["with-confidence"])
+)
+
+if !isnothing(OUTPUT)
+    @info "Saving table at $(OUTPUT)"
+    open(OUTPUT, "w") do io
+        write(io, table)
+    end
+end
+print(table)
