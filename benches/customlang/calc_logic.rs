@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use egg::{*};
-use egg_benchmark::{*};
+use egg::*;
+use egg_benchmark::*;
 
-// ## Theory of Calculational Logic 
+// ## Theory of Calculational Logic
 // https://www.cs.cornell.edu/gries/Logic/Axioms.html
 // The axioms of calculational propositional logic C are listed in the order in
 // which they are usually presented and taught. Note that equivalence comes
@@ -15,8 +15,7 @@ use egg_benchmark::{*};
 // Implication: p ⟹ q == p | q == q
 // Consequence: p ⟸q == q ⟹ p
 //
-// Definition of false: false == !true 
-
+// Definition of false: false == !true
 
 define_language! {
     pub enum CalcLogic {
@@ -31,23 +30,21 @@ define_language! {
     }
 }
 
-
-
 pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
     vec![
-        // ((p == q) == r) == (p == (q == r))      # Associativity of ==: 
+        // ((p == q) == r) == (p == (q == r))      # Associativity of ==:
         rewrite!("==-assoc"; "(== (== ?p ?q) ?r)" <=> "(== ?p (== ?q ?r))"),
-        // (p == q) == (q == p)                    # Symmetry of ==: 
+        // (p == q) == (q == p)                    # Symmetry of ==:
         rewrite!("==-sym"; "(== ?p ?q)" <=> "(== ?q ?p)"),
         // !(p == q) == (!(p) == q)                # Distributivity of !:
         rewrite!("==-distr"; "(!! (== ?p ?q))" <=> "(== (!! ?p) ?q)"),
-        // (p != q) == !(p == q)                   # Definition of !=: 
+        // (p != q) == !(p == q)                   # Definition of !=:
         rewrite!("!="; "(!= ?p ?q)" <=> "(!! (== ?p ?q))"),
         // ((p || q) || r) == (p || (q || r))      # Associativity of ||:
         rewrite!("||-assoc"; "(|| (|| ?p ?q) ?r)" <=> "(|| ?p (|| ?q ?r))"),
-        // (p || q) == (q || p)                    # Symmetry of ||: 
+        // (p || q) == (q || p)                    # Symmetry of ||:
         rewrite!("||-sym"; "(|| ?p ?q)" <=> "(|| ?q ?p)"),
-        // (p || (q == r)) == (p || q == p || r)   # Distributivity of ||: 
+        // (p || (q == r)) == (p || q == p || r)   # Distributivity of ||:
         rewrite!("||-distr"; "(|| ?p (== ?q ?r))" <=> "(== (|| ?p ?q) (|| ?p ?r))"),
         // !(p || q) == (!p && !q)                 # DeMorgan
         rewrite!("||-demorgan"; "(!! (|| ?p ?q))" <=> "(&& (!! ?p) (!! ?q))"),
@@ -57,14 +54,14 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
         rewrite!("&&"; "(&& ?p ?q)" <=> "(== (== ?p ?q) (|| ?p ?q))"),
         // (p ⟹  q) == ((p || q) == q)
         rewrite!("=>"; "(=> ?p ?q)" <=> "(== (|| ?p ?q) ?q)"),
-
-        // (q == q) --> true                       # Identity of ==: 
+        // (q == q) --> true                       # Identity of ==:
         vec![rewrite!("==-id"; "(== ?p ?p)" => "true")],
         // (p || p) --> p                          # Idempotency of ||:
         vec![rewrite!("||-idem"; "(|| ?p ?p)" => "?p")],
         // (p || !(p)) --> true                    # Excluded Middle:
         vec![rewrite!("||-excl"; "(|| ?p (!! ?p))" => "true")],
-    ].concat()
+    ]
+    .concat()
 }
 
 // fold = @theory p q begin
@@ -74,34 +71,31 @@ pub fn calc_logic_rules() -> Vec<Rewrite<CalcLogic, ()>> {
 //   (p::Bool && q::Bool) => (p && q)
 //   !(p::Bool)           => (!p)
 // end
-// 
+//
 // calculational_logic_theory = calc ∪ fold
-
 
 pub fn calc_logic_benchmark(c: &mut Criterion) {
     let rules = calc_logic_rules();
     let tru: RecExpr<CalcLogic> = "true".parse().unwrap();
 
     let demorgan: RecExpr<CalcLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
-    c.bench_function(
-        "customlang/calc_logic/demorgan",
-        |b| b.iter(|| {
+    c.bench_function("customlang/calc_logic/demorgan", |b| {
+        b.iter(|| {
             let res = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
             assert!(tru.eq(&res))
         })
-    );
+    });
 
-    let frege: RecExpr<CalcLogic> = "(=> (=> p (=> p r)) (=> (=> q p) (=> p r)))"
-        .parse().unwrap();
-    c.bench_function(
-        "customlang/calc_logic/freges_theorem",
-        |b| b.iter(|| {
-            let res = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
+    let frege: RecExpr<CalcLogic> = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
+        .parse()
+        .unwrap();
+    c.bench_function("customlang/calc_logic/freges_theorem", |b| {
+        b.iter(|| {
+            let res = prove(black_box(&frege), black_box(&rules), 2, 10, &tru);
             assert!(tru.eq(&res))
         })
-    );
+    });
 }
 
 criterion_group!(benches, calc_logic_benchmark);
 criterion_main!(benches);
-
