@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::{*, rewrite as rw};
 use egg_benchmark::{*};
+use log::{warn};
 
 define_language! {
     pub enum PropositionalLogic {
@@ -89,20 +90,30 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         = "(|| (!! (&& (|| (!! p) q) (&& (|| (!! r) s) (|| p r)))) (|| q s))"
         .parse().unwrap();
     c.bench_function( "prop_logic/prove1",
-        |b| b.iter(|| {
-            let result = prove(black_box(&ex_logic), black_box(&rules), 2, 6, &tru);
-            assert_eq!(result, tru)
-        })
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
+                let (result,itersize) = prove(black_box(&ex_logic), black_box(&rules), 2, 6, &tru);
+                assert_eq!(result, tru);
+                size = itersize;
+            });
+            warn!("prop_logic/prove1 {}", size);
+        }
     );
 
     let demorgan: RecExpr<SymbolLang>
         = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
         .parse().unwrap();
     c.bench_function( "prop_logic/demorgan",
-        |b| b.iter(|| {
-            let result = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
-            assert_eq!(result, tru)
-        })
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
+                let (result,itersize) = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
+                size = itersize;
+                assert_eq!(result, tru)
+            });
+            warn!("prop_logic/demorgan {}", size);
+        }
     );
 
     let frege: RecExpr<SymbolLang>
@@ -110,10 +121,15 @@ pub fn propositional_logic_benchmark(c: &mut Criterion) {
         .parse().unwrap();
     c.bench_function(
         "prop_logic/freges_theorem",
-        |b| b.iter(|| {
-            let result = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
-            assert_eq!(result, tru)
-        })
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
+                let (result,itersize) = prove(black_box(&frege), black_box(&rules), 1, 10, &tru);
+                size = itersize;
+                assert_eq!(result, tru)
+            });
+            warn!("prop_logic/freges_theorem {}", size);
+        }
     );
 }
 

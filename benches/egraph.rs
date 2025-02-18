@@ -15,7 +15,8 @@ use rand::Rng;
 use std::char;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::{*};
-
+use egg_benchmark::*;
+use log::{warn};
 
 define_language! {
     pub enum BasicMath {
@@ -59,10 +60,17 @@ pub fn egraph_benchmark(c: &mut Criterion) {
 
     let expr: RecExpr<BasicMath> = nested_expr(2000).parse().unwrap();
     c.bench_function( "egraph/addexpr",
-        |b| b.iter(|| {
-            let runner: Runner<BasicMath,()> = Runner::default().with_expr(black_box(&expr));
-            runner
-        })
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
+                let runner: Runner<BasicMath,()> = Runner::default().with_expr(black_box(&expr));
+                size.num_classes = runner.egraph.classes().count();
+                size.num_memo = runner.egraph.total_size();
+                size.num_nodes = runner.egraph.total_number_of_nodes();
+                runner
+            });
+            warn!("egraph/addexpr {}", size);
+        }
     );
 }
 

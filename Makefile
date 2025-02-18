@@ -15,7 +15,7 @@ mt-bench:
 		--output-dir=$(MT_RESULTS_DIR)
 
 egg-bench:
-	cargo bench
+	cargo bench 2> egg-log.txt
 
 results-table:
 	# TODO: don't cut off long table header names

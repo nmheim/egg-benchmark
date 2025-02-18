@@ -1,10 +1,25 @@
 use egg::*;
 
+pub struct EGraphSize {
+    pub num_classes: usize,
+    pub num_memo: usize,
+    pub num_nodes: usize
+}
+
+use std::fmt;
+
+impl fmt::Display for EGraphSize {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "n_classes: {}, n_nodes: {}, n_memo: {}", self.num_classes, self.num_nodes, self.num_memo)
+    }
+}
+
+
 pub fn simplify<L: Language>(
     expr: &RecExpr<L>,
     rules: &Vec<Rewrite<L, ()>>,
     timeout: usize,
-) -> RecExpr<L> {
+) -> (RecExpr<L>, EGraphSize) {
     // run rules
     let scheduler = BackoffScheduler::default();
     let runner = Runner::default()
@@ -17,7 +32,12 @@ pub fn simplify<L: Language>(
     // extract shortest expression
     let extractor = Extractor::new(&runner.egraph, AstSize);
     let (_, best) = extractor.find_best(runner.roots[0]);
-    best
+    // println!("simplify: eclasses: {}", runner.egraph.classes().count());
+    let size = EGraphSize { 
+        num_classes: runner.egraph.classes().count(), 
+        num_memo: runner.egraph.total_size(), 
+        num_nodes: runner.egraph.total_number_of_nodes() };
+    (best, size)
 }
 
 pub fn prove<L: Language>(
@@ -26,7 +46,10 @@ pub fn prove<L: Language>(
     steps: usize,
     timeout: usize,
     tru: &RecExpr<L>,
-) -> RecExpr<L> {
+) -> (RecExpr<L>, EGraphSize) {
+    let mut n_classes = 0;
+    let mut n_memo = 0;
+    let mut n_nodes = 0;
     let out: RecExpr<L> = (0..steps).fold(expr.clone(), |expr, _| {
         let scheduler = BackoffScheduler::default()
             .with_initial_match_limit(6000)
@@ -51,7 +74,13 @@ pub fn prove<L: Language>(
         let root = runner.roots[0];
         let extractor = Extractor::new(&runner.egraph, AstSize);
         let (_, best) = extractor.find_best(root);
+        // println!("prove: eclasses {}", runner.egraph.classes().count());
+        n_classes += runner.egraph.classes().count();
+        n_memo += runner.egraph.total_size();
+        n_nodes += runner.egraph.total_number_of_nodes();
         best
     });
-    out
+    let size = EGraphSize { num_classes: n_classes, num_memo: n_memo, num_nodes: n_nodes };
+
+    (out, size)
 }

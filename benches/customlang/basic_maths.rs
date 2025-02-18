@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::*;
-use egg_benchmark::simplify;
+use egg_benchmark::{simplify, EGraphSize};
+use log::{warn};
 
 define_language! {
     pub enum BasicMath {
@@ -70,21 +71,31 @@ pub fn basic_maths_rules() -> Vec<Rewrite<BasicMath, ()>> {
 pub fn basic_maths_benchmark(c: &mut Criterion) {
     c.bench_function(
         "customlang/basic_maths/simpl1",
-        |b| b.iter(|| {
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
             let expr: RecExpr<BasicMath> = "(+ a (+ b (+ (* 0 c) d)))".parse().unwrap();
 
-            simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
+            let (_result,itersize) = simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
+            size=itersize;
             //assert_eq!(result, "(+ d (+ b a))");
-        })
+            });
+            warn!("customlang/basic_maths/simpl1 {}", size);
+        }
     );
 
     c.bench_function(
         "customlang/basic_maths/simpl2",
-        |b| b.iter(|| {
-            let expr = "(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)".parse().unwrap();
-            let result =  simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
-            assert_eq!(result, "a".parse().unwrap());
-        })
+        |b| {
+            let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
+            b.iter(|| {
+                let expr = "(+ (+ (+ 0 (* (* 1 foo) 0)) (* a 0)) a)".parse().unwrap();
+                let (result,itersize) =  simplify(black_box(&expr), black_box(&basic_maths_rules()), 8);
+                size=itersize;
+                assert_eq!(result, "a".parse().unwrap());
+            });
+            warn!("customlang/basic_maths/simpl2 {}", size);
+        }
     );
 }
 
