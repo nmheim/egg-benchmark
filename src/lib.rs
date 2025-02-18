@@ -32,7 +32,6 @@ pub fn simplify<L: Language>(
     // extract shortest expression
     let extractor = Extractor::new(&runner.egraph, AstSize);
     let (_, best) = extractor.find_best(runner.roots[0]);
-    // println!("simplify: eclasses: {}", runner.egraph.classes().count());
     let size = EGraphSize { 
         num_classes: runner.egraph.classes().count(), 
         num_memo: runner.egraph.total_size(), 
@@ -74,7 +73,6 @@ pub fn prove<L: Language>(
         let root = runner.roots[0];
         let extractor = Extractor::new(&runner.egraph, AstSize);
         let (_, best) = extractor.find_best(root);
-        // println!("prove: eclasses {}", runner.egraph.classes().count());
         n_classes += runner.egraph.classes().count();
         n_memo += runner.egraph.total_size();
         n_nodes += runner.egraph.total_number_of_nodes();
