@@ -61,7 +61,7 @@ function load_results(path::String)
     
     # parse egraph size from logs
     pat = r"\[[^\]]+] (?<bench>.+) n_classes: (?<n_classes>\d+), n_nodes: (?<n_nodes>\d+), n_memo: (?<n_memo>\d+)"
-    open("egg-log.txt", "r") do io
+    open("./target/egg-log.txt", "r") do io
         d = Dict()
         for line in eachline(io)
             m = match(pat, line)
@@ -81,7 +81,35 @@ function load_results(path::String)
             push!(od[bench], "n_nodes_avg" => avg(vectors[2]))
             push!(od[bench], "n_memo_avg" => avg(vectors[3]))
         end
-        @show od
+    end
+    od
+end
+
+function load_size_results!(od)
+    # parse egraph size from logs
+    pat1 = r".*Info.*Running benchmarks for [^@]+@(?<branch>[^:]+):"
+    # [ Info: Running benchmarks for Metatheory@31db7e8:
+    pat2 = r"(?<bench>.+) n_classes: (?<n_classes>\d+), n_nodes: (?<n_nodes>\d+), n_memo: (?<n_memo>\d+)"
+    open("./target/mt_results/mt-log.txt", "r") do io
+        curbranch = ""
+        avg(xs) = sum(xs) / length(xs)
+        for line in eachline(io)
+            m1 = match(pat1, line)
+            !isnothing(m1) && (curbranch = m1["branch"])
+            
+            m2 = match(pat2, line)
+            !isnothing(m2) || continue
+            
+            bench = m2["bench"]
+            n_classes = parse(Int,m2["n_classes"])
+            n_nodes = parse(Int, m2["n_nodes"])
+            n_memo = parse(Int, m2["n_memo"])
+
+            push!(od[curbranch][bench], "n_classes_avg" => n_classes)
+            push!(od[curbranch][bench], "n_nodes_avg" => n_nodes)
+            push!(od[curbranch][bench], "n_memo_avg" => n_memo)
+        end
+        
     end
     od
 end
@@ -121,7 +149,7 @@ function ratio_column!(combined_results, c1, c2, key="median")
         if haskey(combined_results[c2], row)
             a = combined_results[c1][row][key]
             b = combined_results[c2][row][key]
-            col[row] = Dict("speedup"=>a/b)
+            col[row] = Dict("speedup" => a/b)
         end
     end
 
@@ -134,12 +162,13 @@ air = AirspeedVelocity.load_results(
     "Metatheory", BRANCHES,
     input_dir=MT_RESULTS_DIR
 )
+load_size_results!(air)
 
 egg = load_results(EGG_RESULTS_DIR)
 
 egg_customlang = Dict(k=>v for (k,v) in egg if occursin("customlang", k))
 egg_symbollang = Dict(k=>v for (k,v) in egg if k ∉ keys(egg_customlang))
-egg_customlang = Dict(replace(k, "customlang_"=>"")=>v for (k,v) in egg_customlang)
+egg_customlang = Dict(replace(k, "customlang_" => "")=>v for (k,v) in egg_customlang)
 results = OrderedDict(
     "egg-sym" => egg_symbollang,
     "egg-cust" => egg_customlang,
@@ -151,7 +180,7 @@ end
 
 new_res = OrderedDict(
     rev => OrderedDict(
-         replace(k, "/"=>"_") => v for (k,v) in d
+         replace(k, "/" => "_") => v for (k,v) in d
     ) for (rev, d) in results
 )
 
@@ -173,7 +202,7 @@ if !isnothing(OUTPUT)
         write(io, table)
     end
 end
-print(table)
+println(table)
 
 # append another table with size information
 table = AirspeedVelocity.create_table(
@@ -184,7 +213,8 @@ table = AirspeedVelocity.create_table(
 if !isnothing(OUTPUT)
     @info "Saving table at $(OUTPUT)"
     open(OUTPUT, "a") do io
+        println(io)
         write(io, table)
     end
 end
-print(table)
+println(table)
