@@ -51,8 +51,8 @@ pub fn basic_maths_rules() -> Vec<Rewrite<SymbolLang, ()>> {
         rewrite!("power-distr-1"; "(^ (* ?x ?y) ?z)" => "(* (^ ?x ?z) (^ ?y ?z))"),
         rewrite!("power-distr-2"; "(* (^ ?x ?z) (^ ?y ?z))" => "(^ (* ?x ?y) ?z)"),
         //(x^p)^q == x^(p * q)
-        rewrite!("power-power-1"; "(^ (^ ?x ?p) ?q)" => "(^ ?x (+ ?p ?q))"),
-        rewrite!("power-power-2"; "(^ ?x (+ ?p ?q))" => "(^ (^ ?x ?p) ?q)"),
+        rewrite!("power-power-1"; "(^ (^ ?x ?p) ?q)" => "(^ ?x (* ?p ?q))"),
+        rewrite!("power-power-2"; "(^ ?x (* ?p ?q))" => "(^ (^ ?x ?p) ?q)"),
         //x^0 --> 1
         rewrite!("power-x0"; "(^ ?x 0)" => "1"),
         //0^x --> 0
@@ -60,7 +60,7 @@ pub fn basic_maths_rules() -> Vec<Rewrite<SymbolLang, ()>> {
         //1^x --> 1
         rewrite!("power-1x"; "(^ 1 ?x)" => "1"),
         //x^1 --> x
-        rewrite!("power-x1"; "(^ 1 ?x)" => "?x"),
+        rewrite!("power-x1"; "(^ ?x 1)" => "?x"),
         //inv(x) == x^(-1)
         rewrite!("power-inv"; "(inv ?x)" => "(^ ?x (- 1))")
     ]
