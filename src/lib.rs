@@ -49,6 +49,8 @@ pub fn prove<L: Language>(
     let mut n_classes = 0;
     let mut n_memo = 0;
     let mut n_nodes = 0;
+    // We start with the provided expr and in the following iterations start with the expr returned by the previous iteration.
+    // As soon as expr == true all subsequent calls of .run() will return immediately because of the hook.
     let out: RecExpr<L> = (0..steps).fold(expr.clone(), |expr, _| {
         let scheduler = BackoffScheduler::default()
             .with_initial_match_limit(6000)
