@@ -126,8 +126,10 @@ function format_val(val::Dict; confidence_interval=true)
     elseif haskey(val, "median")
         unit, unit_name = val["median"]>1e6 ? (1e-6, "ms") : (1e-3, "μs")
         @sprintf("%.3g %s", val["median"] * unit, unit_name)
+    elseif haskey(val, "median ratio")
+        @sprintf("%.3f", val["median ratio"])
     else
-        @sprintf("%.3g", val["speedup"])
+        ""
     end
 end
 format_val(::Missing; kw...) = @sprintf("")
@@ -136,20 +138,26 @@ format_val(::Missing; kw...) = @sprintf("")
 function format_size(val::Dict)
     if haskey(val, "n_classes_avg")
         @sprintf("%i %i %i", val["n_classes_avg"], val["n_nodes_avg"], val["n_memo_avg"])
+    elseif haskey(val, "n_classes_avg ratio")
+        @sprintf("%.3f %.3f", val["n_classes_avg ratio"], val["n_nodes_avg ratio"])
     else
         ""
     end
 end
 format_size(::Missing; kw...) = @sprintf("")
 
-function ratio_column!(combined_results, c1, c2, key="median")
+function ratio_column!(combined_results, c1, c2, ratiokeys...)
     all_keys = combined_results[c1] |> keys
     col = OrderedDict{String,Dict}()
     for row in all_keys
         if haskey(combined_results[c2], row)
-            a = combined_results[c1][row][key]
-            b = combined_results[c2][row][key]
-            col[row] = Dict("speedup" => a/b)
+            for rkey in ratiokeys
+                a = get(combined_results[c1][row], rkey, nothing)
+                b = get(combined_results[c2][row], rkey, nothing)
+                !isnothing(a) && !isnothing(b) || continue
+                
+                get!(col, row, Dict())["$rkey ratio"] = a/b
+            end
         end
     end
 
@@ -185,11 +193,11 @@ new_res = OrderedDict(
 )
 
 
-
-ratio_column!(new_res, "egg-sym", "MT@$(BRANCHES[1])")
-ratio_column!(new_res, "egg-cust", "MT@$(BRANCHES[1])")
+ratiokeys = ("median", "n_classes_avg", "n_nodes_avg")
+ratio_column!(new_res, "egg-sym", "MT@$(BRANCHES[1])", ratiokeys...)
+ratio_column!(new_res, "egg-cust", "MT@$(BRANCHES[1])", ratiokeys...)
 for b2 in BRANCHES[2:end]
-    ratio_column!(new_res, "MT@$b2", "MT@$(BRANCHES[1])")
+    ratio_column!(new_res, "MT@$b2", "MT@$(BRANCHES[1])", ratiokeys...)
 end
 table = AirspeedVelocity.create_table(
     new_res,
