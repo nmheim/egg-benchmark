@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use egg::*;
 use egg_benchmark::*;
+use log::{warn};
 
 // ## Theory of Calculational Logic
 // https://www.cs.cornell.edu/gries/Logic/Axioms.html
@@ -80,20 +81,26 @@ pub fn calc_logic_benchmark(c: &mut Criterion) {
 
     let demorgan: RecExpr<SymbolLang> = "(== (!! (|| p q)) (&& (!! p) (!! q)))".parse().unwrap();
     c.bench_function("calc_logic/demorgan", |b| {
+        let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
         b.iter(|| {
-            let res = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
+            let (res,itersize) = prove(black_box(&demorgan), black_box(&rules), 1, 10, &tru);
+            size = itersize;
             assert!(tru.eq(&res))
-        })
+        });
+        warn!("calc_logic/demorgan {}", size);
     });
 
     let frege: RecExpr<SymbolLang> = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
         .parse()
         .unwrap();
     c.bench_function("calc_logic/freges_theorem", |b| {
+        let mut size = EGraphSize{num_classes:0, num_nodes:0, num_memo:0};
         b.iter(|| {
-            let res = prove(black_box(&frege), black_box(&rules), 2, 10, &tru);
+            let (res,itersize) = prove(black_box(&frege), black_box(&rules), 2, 10, &tru);
+            size = itersize;
             assert!(tru.eq(&res))
-        })
+        });
+        warn!("calc_logic/freges_theorem {}", size);
     });
 }
 

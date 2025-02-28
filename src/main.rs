@@ -91,7 +91,8 @@ pub fn main() {
     // demorgan
     let ex_demorgan: RecExpr<PropositionalLogic> = "(== (!! (|| p q)) (&& (!! p) (!! q)))"
         .parse().unwrap();
-    println!("demorgan: {}", prove(&ex_demorgan, &rules, 1, 10, &tru));
+    let (res, size) = prove(&ex_demorgan, &rules, 1, 10, &tru);
+    println!("demorgan: {} {}", res, size);
 
     println!("simplification time {}", apply_time.elapsed().as_secs_f64());
 
@@ -102,7 +103,8 @@ pub fn main() {
     // frege
     let ex_frege: RecExpr<PropositionalLogic> = "(=> (=> p (=> q r)) (=> (=> p q) (=> p r)))"
         .parse().unwrap();
-    println!("frege:    {}", prove(&ex_frege, &rules, 1, 10, &tru));
+    let (res, size) = prove(&ex_frege, &rules, 1, 10, &tru);
+    println!("frege:    {} {}", res, size);
 
     println!("simplification time {}", apply_time.elapsed().as_secs_f64());
 
@@ -117,8 +119,8 @@ pub fn main() {
     // let ex_logic = "(== p p)";
     
     let ex_logic: RecExpr<PropositionalLogic> = s.parse().unwrap();
-    let expr = prove(&ex_logic, &rules, 2, 6, &tru);
-    println!("logic:    {}", tru.eq(&expr));
+    let (expr, size) = prove(&ex_logic, &rules, 2, 6, &tru);
+    println!("logic:    {} {}", tru.eq(&expr), size);
 
     println!("simplification time {}", apply_time.elapsed().as_secs_f64());
 }

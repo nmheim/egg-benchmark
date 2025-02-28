@@ -12,10 +12,11 @@ mt-bench:
 	$(HOME)/.julia/bin/benchpkg Metatheory \
 		-r $(BRANCH1),$(BRANCH2) \
 		--bench-on=$(BRANCH1) \
-		--output-dir=$(MT_RESULTS_DIR)
+		--output-dir=$(MT_RESULTS_DIR) \
+		2>&1 | tee "$(MT_RESULTS_DIR)/mt-log.txt"
 
 egg-bench:
-	cargo bench
+	cargo bench 2>&1 | tee ./target/egg-log.txt
 
 results-table:
 	# TODO: don't cut off long table header names
